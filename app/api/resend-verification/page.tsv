@@ -1,0 +1,34 @@
+"use client"
+
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { AuthLayout } from "@/components/auth-layout"
+import { Button } from "@/components/ui/button"
+
+export default function VerifyEmailPage() {
+  const [isResending, setIsResending] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const { toast } = useToast()
+
+  const handleResendEmail = async () => {
+    setIsResending(true)
+    const res = await fetch("/api/auth/resend-verification", { method: "POST" })
+    const data = await res.json()
+
+    if (!res.ok) {
+      toast({ title: "Error", description: data.error || "Could not resend email" })
+    } else {
+      setEmailSent(true)
+      toast({ title: "Verification email sent!", description: "Check your inbox." })
+    }
+    setIsResending(false)
+  }
+
+  return (
+    <AuthLayout>
+      <Button onClick={handleResendEmail} disabled={isResending}>
+        {isResending ? "Sending..." : emailSent ? "Sent Again!" : "Resend Verification Email"}
+      </Button>
+    </AuthLayout>
+  )
+}
