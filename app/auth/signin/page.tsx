@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -14,10 +13,7 @@ import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 export default function SignInPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  })
+  const [formData, setFormData] = useState({ email: "", password: "" })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -25,7 +21,6 @@ export default function SignInPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }))
     }
@@ -33,35 +28,48 @@ export default function SignInPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
-
     if (!formData.email) {
       newErrors.email = "Email is required"
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Please enter a valid email"
     }
-
     if (!formData.password) {
       newErrors.password = "Password is required"
     }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!validateForm()) return
-
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const res = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
 
-    toast({
-      title: "Welcome back!",
-      description: "You have been successfully signed in.",
-    })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setErrors({ password: data.error || "Login failed" })
+        toast({
+          title: "Login failed",
+          description: data.error || "Invalid email or password",
+        })
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully signed in.",
+        })
+        window.location.href = "/dashboard"
+      }
+    } catch {
+      toast({ title: "Server Error", description: "Something went wrong." })
+    }
 
     setIsLoading(false)
   }
@@ -137,7 +145,7 @@ export default function SignInPage() {
             {/* Forgot Password Link */}
             <div className="text-right">
               <Link
-                href="/auth/forgot-password"
+                href="/auth/forgotpassword"
                 className="text-orange-600 hover:text-orange-700 text-sm font-medium transition-colors"
               >
                 Forgot your password?
